@@ -1,15 +1,19 @@
 import pygame
 from Player import Player
+from Enemy import Enemy
+import random
 
 class Game:
     def __init__(self):
         self.clock = pygame.time.Clock()
         pygame.init()
         self.screen = pygame.display.set_mode((800, 600))
+        self.running = True
 
 
         self.player = Player()
         self.player.rect.center = (380, 550)
+        self.screen.blit(self.player.image, self.player.rect)
 
         self.obstacles = [
             pygame.Rect(150, 450, 50, 50),
@@ -17,17 +21,31 @@ class Game:
             pygame.Rect(350, 450, 125, 50)
         ]
 
-    def handle_movement(self):
-        keys = pygame.key.get_pressed()
-        dx, dy = 0, 0
+    def draw(self):
+        self.screen.fill((0, 204, 0))
+        for obstacle in self.obstacles:
+            pygame.draw.rect(self.screen, (153, 76, 0), obstacle)
 
-        if keys[pygame.K_a] and self.player.x > 0:
+        self.screen.blit(self.player.image, self.player.rect)
+        pygame.display.update()
+
+    def handle_events(self):
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                self.running = False
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        self.player.update_image(keys)
+
+        dx, dy = 0, 0
+        if keys[pygame.K_a] and self.player.rect.left > 0:
             dx = -self.player.speed
-        if keys[pygame.K_d] and self.player.x < 750:
+        if keys[pygame.K_d] and self.player.rect.right < 800:
             dx = self.player.speed
-        if keys[pygame.K_w] and self.player.y > 400:
+        if keys[pygame.K_w] and self.player.rect.top > 400:
             dy = -self.player.speed
-        if keys[pygame.K_s] and self.player.y < 560:
+        if keys[pygame.K_s] and self.player.rect.bottom < 600:
             dy = self.player.speed
 
         self.player.rect.x += dx
@@ -44,34 +62,9 @@ class Game:
                 elif dy < 0:
                     self.player.rect.top = obstacle.bottom
 
-        self.player.x = self.player.rect.x
-        self.player.y = self.player.rect.y
-
     def run(self):
-        running = True
-        while running:
-
-            self.screen.fill((0, 204, 0))
-
-            for obstacle in self.obstacles:
-                pygame.draw.rect(self.screen, (153, 76, 0), obstacle)
-
-            for e in pygame.event.get():
-                if e.type == pygame.QUIT:
-                    running = False
-
-            keys = pygame.key.get_pressed()
-
-            if keys[pygame.K_a]:
-                self.screen.blit(self.player.go_left, (self.player.x, self.player.y))
-            elif keys[pygame.K_d]:
-                self.screen.blit(self.player.go_right, (self.player.x, self.player.y))
-            elif keys[pygame.K_s]:
-                self.screen.blit(self.player.go_back, (self.player.x, self.player.y))
-            else:
-                self.screen.blit(self.player.image, (self.player.x, self.player.y))
-
-            self.handle_movement()
-
-            pygame.display.update()
+        while self.running:
+            self.draw()
+            self.handle_events()
+            self.update()
             self.clock.tick(60)
