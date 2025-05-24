@@ -1,7 +1,6 @@
 import pygame
 from Player import Player
 from Enemy import Enemy
-import random
 
 class Game:
     def __init__(self):
@@ -21,10 +20,16 @@ class Game:
             pygame.Rect(350, 450, 125, 50)
         ]
 
+        self.enemies = [Enemy() for _ in range(1)]
+        pygame.time.set_timer(Enemy().timer, 1500)
+
     def draw(self):
         self.screen.fill((0, 204, 0))
         for obstacle in self.obstacles:
             pygame.draw.rect(self.screen, (153, 76, 0), obstacle)
+
+        for ememy in self.enemies:
+            self.screen.blit(ememy.image, ememy.rect)
 
         self.screen.blit(self.player.image, self.player.rect)
         pygame.display.update()
@@ -33,6 +38,8 @@ class Game:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 self.running = False
+            if e.type == Enemy().timer:
+                self.enemies.append(Enemy())
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -61,6 +68,9 @@ class Game:
                     self.player.rect.bottom = obstacle.top
                 elif dy < 0:
                     self.player.rect.top = obstacle.bottom
+
+        for enemy in self.enemies:
+            enemy.update()
 
     def run(self):
         while self.running:
