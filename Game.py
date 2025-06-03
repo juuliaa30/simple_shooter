@@ -21,7 +21,8 @@ class Game:
             pygame.Rect(350, 450, 125, 50)
         ]
 
-        self.enemies = [Enemy() for _ in range(1)]
+        self.enemies = list()
+        self.enemies_count = 5
         pygame.time.set_timer(Enemy().timer, 2000)
 
         self.bullets = list()
@@ -86,7 +87,9 @@ class Game:
             if e.type == pygame.QUIT:
                 self.running = False
             if e.type == Enemy().timer:
-                self.enemies.append(Enemy())
+                if self.enemies_count > 0:
+                    self.enemies.append(Enemy())
+                    self.enemies_count -= 1
             if e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_SPACE:
                     bullet = Bullet()
