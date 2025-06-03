@@ -12,6 +12,7 @@ class Player:
         self.go_left = pygame.transform.rotate(self.image, 90)
         self.go_back = pygame.transform.rotate(self.image, 180)
         self.go_front = pygame.transform.rotate(self.image, 0)
+        self.score = 0
 
     def update_image(self, keys):
         if keys[pygame.K_a]:

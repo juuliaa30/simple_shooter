@@ -26,8 +26,13 @@ class Game:
 
         self.bullets = list()
 
+        self.font = pygame.font.SysFont('Arial', 36)
+
+
     def draw(self):
+        text1 = self.font.render(f"Очки: {self.player.score}", False, (0, 0, 0))
         self.screen.fill((0, 204, 0))
+        self.screen.blit(text1, (600, 20))
         for obstacle in self.obstacles:
             pygame.draw.rect(self.screen, (153, 76, 0), obstacle)
 
@@ -47,6 +52,11 @@ class Game:
                         if bullet.rect.colliderect(enemy):
                             self.bullets.remove(bullet)
                             self.enemies.remove(enemy)
+                            self.player.score += 1
+
+            for obs in self.obstacles:
+                if bullet.rect.colliderect(obs):
+                    self.bullets.remove(bullet)
 
         self.screen.blit(self.player.image, self.player.rect)
         pygame.display.update()
