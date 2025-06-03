@@ -2,6 +2,8 @@ import pygame
 from Player import Player
 from Enemy import Enemy
 from Bullet import Bullet
+import json
+from random import randint
 
 class Game:
     def __init__(self):
@@ -10,25 +12,92 @@ class Game:
         self.screen = pygame.display.set_mode((800, 600))
         self.running = True
 
+        self.load_levels()
+        self.current_level = 0
+        self.setup_level(self.current_level)
+
+    def load_levels(self):
+        with open('levels.json', 'r') as f:
+            self.levels_data = json.load(f)['levels']
+
+    def setup_level(self, level_num):
+        level = self.levels_data[level_num]
 
         self.player = Player()
         self.player.rect.center = (380, 550)
         self.screen.blit(self.player.image, self.player.rect)
 
         self.obstacles = [
-            pygame.Rect(150, 450, 50, 50),
-            pygame.Rect(650, 450, 50, 50),
-            pygame.Rect(350, 450, 125, 50)
+            pygame.Rect(obs['x'], obs['y'], obs['width'], obs['height'])
+            for obs in level['obstacles']
         ]
 
-        self.enemies = list()
-        self.enemies_count = 5
+        self.enemies = []
+        self.enemies_count = level['enemies_count']
+        self.enemy_speed = level['enemy_speed']
+        self.enemy_size = level['enemy_size']
+        self.enemy_xp = level['enemy_xp']
+
+
         pygame.time.set_timer(Enemy().timer, 2000)
 
         self.bullets = list()
 
         self.font = pygame.font.SysFont('Arial', 36)
 
+        self.show_level_message(level_num + 1)
+
+    def show_level_message(self, level_num):
+        self.screen.fill((0, 204, 0))
+        level_text = self.font.render(f"Уровень {level_num}", True, (255, 255, 255))
+        info_text = self.font.render("Нажмите любую клавишу для продолжения", True, (255, 255, 255))
+
+        self.screen.blit(level_text, (
+            400 - level_text.get_width() // 2,
+            300 - level_text.get_height() // 2
+        ))
+        self.screen.blit(info_text, (
+            400 - info_text.get_width() // 2,
+            350 - info_text.get_height() // 2
+        ))
+
+        pygame.display.flip()
+
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return
+                if event.type == pygame.KEYDOWN:
+                    waiting = False
+
+    def check_level_complete(self):
+        level = self.levels_data[self.current_level]
+        if self.player.score >= level['score_required']:
+            self.current_level += 1
+            if self.current_level < len(self.levels_data):
+                self.setup_level(self.current_level)
+            else:
+                self.show_game_complete()
+                self.running = False
+
+    def show_game_complete(self):
+        self.screen.fill((0, 204, 0))
+        complete_text = self.font.render("Поздравляем! Игра пройдена!", True, (255, 255, 255))
+        score_text = self.font.render(f"Финальный счет: {self.player.score}", True, (255, 255, 255))
+
+        self.screen.blit(complete_text, (
+            400 - complete_text.get_width() // 2,
+            250 - complete_text.get_height() // 2
+        ))
+        self.screen.blit(score_text, (
+            400 - score_text.get_width() // 2,
+            300 - score_text.get_height() // 2
+        ))
+
+        pygame.display.flip()
+        pygame.time.wait(3000)
 
     def draw(self):
         text1 = self.font.render(f"Очки: {self.player.score}", False, (0, 0, 0))
@@ -85,6 +154,7 @@ class Game:
                     self.running = False
 
         self.screen.blit(self.player.image, self.player.rect)
+        self.check_level_complete()
         pygame.display.update()
 
     def handle_events(self):
@@ -93,7 +163,16 @@ class Game:
                 self.running = False
             if e.type == Enemy().timer:
                 if self.enemies_count > 0:
-                    self.enemies.append(Enemy())
+                    enemy = Enemy()
+                    enemy.speed = self.enemy_speed
+                    enemy.xp = self.enemy_xp
+                    enemy.image = pygame.transform.scale(
+                        pygame.image.load('images/roach.png').convert_alpha(),
+                        self.enemy_size
+                    )
+                    enemy.image = pygame.transform.rotate(enemy.image, 180)
+                    enemy.rect = enemy.image.get_rect(topleft=(randint(0, 770), -40))
+                    self.enemies.append(enemy)
                     self.enemies_count -= 1
             if e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_SPACE:
