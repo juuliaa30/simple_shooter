@@ -51,12 +51,32 @@ class Game:
                     for enemy in self.enemies:
                         if bullet.rect.colliderect(enemy):
                             self.bullets.remove(bullet)
-                            self.enemies.remove(enemy)
-                            self.player.score += 1
+                            enemy.xp -= 1
+                            if enemy.xp == 0:
+                                self.enemies.remove(enemy)
+                                self.player.score += 1
 
             for obs in self.obstacles:
                 if bullet.rect.colliderect(obs):
                     self.bullets.remove(bullet)
+
+        if self.enemies:
+            for enemy in self.enemies[:]:
+
+                colliding = any(enemy.rect.colliderect(obs) for obs in self.obstacles)
+                if colliding:
+                    if not hasattr(enemy, 'original_image'):
+                        enemy.original_image = enemy.image.copy()
+                        enemy.original_size = enemy.rect.size
+                        enemy.original_speed = enemy.speed
+
+                    center = enemy.rect.center
+                    enemy.image = pygame.transform.scale(enemy.original_image, (60, 60))
+                    enemy.rect = enemy.image.get_rect(center=center)
+                elif hasattr(enemy, 'original_image'):
+                    center = enemy.rect.center
+                    enemy.image = enemy.original_image
+                    enemy.rect = enemy.image.get_rect(center=center)
 
         self.screen.blit(self.player.image, self.player.rect)
         pygame.display.update()
