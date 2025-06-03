@@ -1,6 +1,7 @@
 import pygame
 from Player import Player
 from Enemy import Enemy
+from Bullet import Bullet
 
 class Game:
     def __init__(self):
@@ -21,7 +22,9 @@ class Game:
         ]
 
         self.enemies = [Enemy() for _ in range(1)]
-        pygame.time.set_timer(Enemy().timer, 1500)
+        pygame.time.set_timer(Enemy().timer, 2000)
+
+        self.bullets = list()
 
     def draw(self):
         self.screen.fill((0, 204, 0))
@@ -30,6 +33,20 @@ class Game:
 
         for ememy in self.enemies:
             self.screen.blit(ememy.image, ememy.rect)
+
+        if self.bullets:
+            for bullet in self.bullets:
+                self.screen.blit(bullet.image, bullet.rect)
+                bullet.rect.y -= 10
+
+                if bullet.rect.y < 0:
+                    self.bullets.remove(bullet)
+
+                if self.enemies:
+                    for enemy in self.enemies:
+                        if bullet.rect.colliderect(enemy):
+                            self.bullets.remove(bullet)
+                            self.enemies.remove(enemy)
 
         self.screen.blit(self.player.image, self.player.rect)
         pygame.display.update()
@@ -40,6 +57,12 @@ class Game:
                 self.running = False
             if e.type == Enemy().timer:
                 self.enemies.append(Enemy())
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_SPACE:
+                    bullet = Bullet()
+                    bullet.rect.midbottom = self.player.rect.midtop
+                    self.bullets.append(bullet)
+
 
     def update(self):
         keys = pygame.key.get_pressed()
