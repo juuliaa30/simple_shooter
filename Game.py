@@ -79,6 +79,11 @@ class Game:
                     enemy.image = enemy.original_image
                     enemy.rect = enemy.image.get_rect(center=center)
 
+        if self.enemies:
+            for enemy in self.enemies[:]:
+                if enemy.rect.y > 600 or enemy.rect.colliderect(self.player):
+                    self.running = False
+
         self.screen.blit(self.player.image, self.player.rect)
         pygame.display.update()
 
